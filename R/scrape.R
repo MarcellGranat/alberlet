@@ -35,8 +35,7 @@ for (type in c("lakas", "haz", "szobat-kinalo-hirdetesek")) {
 
 url <- "https://www.alberlet.hu/kiado_alberlet/budapest-12-kerulet-tusnadi-utca-48m2-2-szoba_851916"
 
-
-room_data <- map(url_total, function(url) {
+room_data <- map(unique(url_total), function(url) {
 page <- SafelyRead(url) 
 page %>% 
   html_table(fill = T) %>% 

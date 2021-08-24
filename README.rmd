@@ -1,0 +1,54 @@
+---
+output: github_document
+---
+
+# Albérlet.hu <img src="logo.png" align="right" width="140" height="140" />
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, comment = "", message = F, warning = F)
+```
+
+## Scrape kód futtatása
+
+```{r results='hide'}
+library(tidyverse)
+library(httr)
+req <- GET("https://api.github.com/repos/MarcellGranat/alberlet/git/trees/main?recursive=1")
+stop_for_status(req)
+filelist <- unlist(lapply(content(req)$tree, "[", "path"), use.names = F) %>% 
+  c(list.files("c:/rprojects/alberlet/data/"))
+
+date <- filelist %>% 
+  keep(~ str_detect(., "2021|2020")) %>% 
+  gsub(pattern = ".*202", replacement = "202") %>% 
+  str_remove_all(".RDS") %>% 
+  unique() %>% 
+  enframe() %>% 
+  transmute(date = as.Date(value), done = T)
+```
+
+```{r fig.width=2, fig.height=2}
+date$date %>% 
+  {seq.Date(from = as.Date("2021-08-01"), to = max(.), by = 1)} %>% 
+  enframe() %>% 
+  transmute(date = as.Date(value)) %>% 
+  left_join(date) %>% 
+  mutate(
+    m = lubridate::month(date, label = T),
+    w = lubridate::isoweek(date),
+    d = lubridate::wday(date, label = T, week_start = 1)
+  ) %>% 
+  ggplot() + 
+  aes(d, w, fill = done) +
+  geom_tile(color = "black", show.legend = FALSE) +
+  scale_fill_manual(values = c("cyan4", "grey20"), na.value = "grey20") +
+  scale_y_continuous(expand = c(0,0), trans = "reverse") +
+  facet_wrap(~ m, scales = "free_y", nrow = 1, labeller = as_labeller(str_to_upper)) + 
+  ggdark::dark_theme_grey() +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank()
+  ) +
+  labs(x = NULL, y = NULL)
+```
+

@@ -56,17 +56,28 @@ page %>%
   ) %>% 
   rbind(
     page %>% 
-      GetHTMLText("#listing-850571 > div:nth-child(5) > div.col-md-8.profile__content-col > div > div.profile__description > div") %>% 
+      GetHTMLText("h4+ div") %>% 
       str_c(collapse = " ") %>% 
       {data.frame(x = "profile_text", y = .)} %>% 
       set_names("x", url)
   )
 })
 
+variables <- room_data %>% 
+  map(~ .$x) %>% 
+  reduce(c) %>% 
+  enframe() %>% 
+  select(x = value) %>% 
+  unique()
+
 room_data <- room_data %>% 
-  reduce(full_join) %>% 
-  t() %>% 
-  data.frame() %>% 
-  {set_names(.[-1, ], .[1, ])}
+  map(function(df) {
+    
+    url <- names(df)[2]
+    df <- set_names(df, "x", "y")
+    df$url <- url
+    df
+  }) %>% 
+  reduce(rbind)
 
 saveRDS(room_data, str_c("c:/rprojects/alberlet/data/alberlet_data_", Sys.Date(), ".RDS"))

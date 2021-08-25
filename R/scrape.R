@@ -1,11 +1,6 @@
 source('C:/rprojects/alberlet/R/functions.R')
 library(parallel)
 
-type <- c(
-  "lakas", "haz", "szobat-kinalo-hirdetesek"
-  
-)
-
 url_total <- c()
 
 for (type in c("lakas", "haz", "szobat-kinalo-hirdetesek")) {
@@ -42,7 +37,7 @@ clusterEvalQ(cl, library(tidyverse))
 clusterExport(cl, list("SafelyRead", "url_total", "GetURL", "GetHTMLText"), envir = environment())
 
 
-room_data <- parallel::parLapply(unique(url_total), function(url) {
+room_data <- parallel::parLapply(cl = cl, X = unique(url_total), function(url) {
 page <- SafelyRead(url) 
 page %>% 
   html_table(fill = T) %>% 
@@ -66,8 +61,6 @@ page %>%
       {data.frame(x = "profile_text", y = .)} %>% 
       set_names("x", url)
   )
-
-
 })
 
 room_data <- room_data %>% 

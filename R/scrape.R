@@ -1,4 +1,5 @@
 source('C:/rprojects/alberlet/R/functions.R')
+library(parallel)
 
 type <- c(
   "lakas", "haz", "szobat-kinalo-hirdetesek"
@@ -35,7 +36,13 @@ for (type in c("lakas", "haz", "szobat-kinalo-hirdetesek")) {
 
 url <- "https://www.alberlet.hu/kiado_alberlet/budapest-12-kerulet-tusnadi-utca-48m2-2-szoba_851916"
 
-room_data <- map(unique(url_total), function(url) {
+cl <- makeCluster(4)
+clusterEvalQ(cl, library(rvest))
+clusterEvalQ(cl, library(tidyverse))
+clusterExport(cl, list("SafelyRead", "url_total", "GetURL", "GetHTMLText"), envir = environment())
+
+
+room_data <- parallel::parLapply(unique(url_total), function(url) {
 page <- SafelyRead(url) 
 page %>% 
   html_table(fill = T) %>% 
